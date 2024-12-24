@@ -1,0 +1,73 @@
+[project]
+name = "avf"
+version = "0.1.0"
+description = "Asset Version Framework - A comprehensive asset versioning system for game development pipelines"
+authors = [
+    {name = "AVF Team", email = "team@avf.com"}
+]
+dependencies = [
+    "pydantic>=2.0",
+    "gitpython>=3.1.40",
+    "p4python>=2023.2",
+    "structlog>=24.1.0",
+    "sqlalchemy>=2.0.0",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Version Control",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/avf"
+Repository = "https://github.com/your-username/avf"
+Documentation = "https://github.com/your-username/avf/blob/main/README.md"
+
+[build-system]
+requires = ["uv==0.1.23"]
+build-backend = "uv.builders.backend"
+
+[tool.uv]
+exclude = [
+    ".env",
+    ".venv",
+    "venv",
+    "env",
+]
+
+[tool.uv.scripts]
+test = "pytest tests/ --verbose"
+format = "black src/ tests/"
+lint = "ruff check src/ tests/"
+typecheck = "mypy src/"
+
+[tool.ruff]
+select = ["E", "F", "I"]
+line-length = 100
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
