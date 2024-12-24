@@ -4,6 +4,12 @@ AVF is a comprehensive asset versioning system designed for game development pip
 
 ## Key Features
 
+### Storage Reference System
+- Create versions from existing storage states without file copies
+- Support for different reference types (files, commits, changelists)
+- Track file moves and renames between versions
+- Unified interface across storage backends
+
 ### Multi-Backend Storage Support
 - Local disk storage with organized directory structure
 - Git integration with branch-based version tracking
@@ -22,11 +28,6 @@ AVF is a comprehensive asset versioning system designed for game development pip
 - Tag-based searching and filtering
 - Performance optimized for large asset collections
 
-### Type-Safe Implementation
-- Full type hinting support
-- Pydantic models for data validation
-- SQLAlchemy ORM with type checking
-
 ## Installation
 
 Using UV (Recommended):
@@ -43,7 +44,7 @@ pip install avf
 
 ## Quick Start
 
-### Basic Usage
+### Basic Version Creation
 
 ```python
 from pathlib import Path
@@ -58,30 +59,78 @@ storage_backends = {
 # Create version manager
 version_manager = AssetVersion(storage_backends)
 
-# Create a version
+# Create a new version
 version_ids = version_manager.create_version(
     file_path=Path("character_model.fbx"),
     metadata={
         "creator": "john_doe",
         "tool_version": "maya_2024",
         "description": "Updated character model",
-        "tags": ["character", "model"],
+        "tags": ["character", "model", "HighPoly"],
         "custom_data": {
-            "polygon_count": 15000,
-            "texture_resolution": "4k"
+            "polygon_count": 15000
         }
     }
 )
+```
 
-# Retrieve a version
-retrieved_path = version_manager.get_version(
-    "disk",
-    version_ids["disk"].storage_id,
-    Path("./retrieved_model.fbx")
+### Creating versions from existing version already in storage
+
+```python
+from avf import StorageReference, ReferenceType
+
+# For existing files in disk storage
+disk_reference = StorageReference(
+    storage_type="disk",
+    storage_id="existing_file_hash",
+    path=Path("./asset_storage/existing_file.fbx"),
+    reference_type=ReferenceType.FILE
+)
+
+disk_version_id = storage_backends["disk"].create_version_from_reference(
+    reference=disk_reference,
+    metadata={
+        "creator": "john_doe",
+        "tool_version": "maya_2024",
+        "description": "Version from existing file"
+    }
+)
+
+# For existing Git commits
+git_reference = StorageReference(
+    storage_type="git",
+    storage_id="commit_hash",
+    path=Path("assets/model.fbx"),
+    reference_type=ReferenceType.COMMIT
+)
+
+git_version_id = storage_backends["git"].create_version_from_reference(
+    reference=git_reference,
+    metadata={
+        "creator": "john_doe",
+        "tool_version": "maya_2024",
+        "description": "Version from existing commit"
+    }
 )
 ```
 
-### With Database Integration
+### Listing Storage References
+
+```python
+# List all file references in disk storage
+disk_refs = storage_backends["disk"].list_references(
+    reference_type=ReferenceType.FILE,
+    path_pattern="*.fbx"
+)
+
+# List all commit references in Git storage
+git_refs = storage_backends["git"].list_references(
+    reference_type=ReferenceType.COMMIT,
+    path_pattern="assets/"
+)
+```
+
+### Database Integration
 
 ```python
 from avf import DatabaseConnection, SQLiteVersionRepository
@@ -110,8 +159,6 @@ version_history = repo.get_version_history(Path("character_model.fbx"))
 
 ### Disk Storage
 ```python
-from avf import DiskStorage
-
 disk_storage = DiskStorage(
     storage_root=Path("./asset_storage")
 )
@@ -121,12 +168,11 @@ Features:
 - Organized directory structure
 - Automatic file deduplication
 - Metadata storage alongside assets
-- Efficient retrieval system
+- Support for existing file references
+- Hard linking optimization when possible
 
 ### Git Storage
 ```python
-from avf import GitStorage
-
 git_storage = GitStorage(
     repo_path=Path("./asset_repo"),
     branch_prefix="asset_versions"
@@ -135,69 +181,38 @@ git_storage = GitStorage(
 
 Features:
 - Branch-based version tracking
-- Full Git history integration
-- Metadata stored in JSON
-- Branch naming conventions
-
-## Metadata System
-
-AVF provides a flexible metadata system:
-
-```python
-metadata = {
-    "creator": "john_doe",         # Required
-    "tool_version": "maya_2024",   # Required
-    "description": "Updated model", # Optional
-    "tags": ["character", "model"], # Optional
-    "custom_data": {               # Optional
-        "polygon_count": 15000,
-        "texture_resolution": "4k",
-        "material_count": 5
-    }
-}
-```
+- Support for existing commit references
+- Track file moves/renames through Git history
+- Full commit metadata preservation
+- Efficient storage through Git's object model
 
 ## Advanced Usage
 
 ### Custom Storage Backend
 
 ```python
-from avf import StorageBackend
+from avf import StorageBackend, StorageReference
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 class CustomStorage(StorageBackend):
-    def store_version(self, file_path: Path, metadata: Dict[str, Any]) -> str:
+    def create_version_from_reference(
+        self,
+        reference: StorageReference,
+        metadata: Dict[str, Any]
+    ) -> str:
         # Implementation
         pass
 
-    def retrieve_version(self, version_id: str, target_path: Optional[Path] = None) -> Path:
+    def list_references(
+        self,
+        reference_type: Optional[str] = None,
+        path_pattern: Optional[str] = None
+    ) -> List[StorageReference]:
         # Implementation
         pass
 
-    def get_version_info(self, version_id: str) -> Dict[str, Any]:
-        # Implementation
-        pass
-```
-
-### Version Querying
-
-```python
-from datetime import datetime, timedelta
-
-# Find versions by creator
-versions = repo.find_versions(creator="john_doe")
-
-# Find versions by date range
-week_ago = datetime.now() - timedelta(days=7)
-recent_versions = repo.find_versions(after=week_ago)
-
-# Complex queries
-character_versions = repo.find_versions(
-    tags=["character"],
-    creator="john_doe",
-    after=week_ago
-)
+    # Implement other required methods
 ```
 
 ## Development Setup
