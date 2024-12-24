@@ -1,4 +1,5 @@
 """Tests for disk storage backend."""
+
 import json
 from pathlib import Path
 
@@ -9,6 +10,7 @@ def test_disk_storage_initialization(disk_storage):
     """Test disk storage initialization."""
     assert disk_storage.storage_root.exists()
     assert (disk_storage.storage_root / "_metadata").exists()
+
 
 def test_store_version(disk_storage, test_file, test_metadata):
     """Test storing a version."""
@@ -26,6 +28,7 @@ def test_store_version(disk_storage, test_file, test_metadata):
     assert stored_metadata["creator"] == test_metadata["creator"]
     assert stored_metadata["tool_version"] == test_metadata["tool_version"]
 
+
 def test_retrieve_version(disk_storage, test_file, test_metadata):
     """Test retrieving a stored version."""
     version_id = disk_storage.store_version(test_file, test_metadata)
@@ -42,6 +45,7 @@ def test_retrieve_version(disk_storage, test_file, test_metadata):
     assert retrieved_path.read_text() == "Test content"
     assert retrieved_path == target_path
 
+
 def test_get_version_info(disk_storage, test_file, test_metadata):
     """Test getting version metadata."""
     version_id = disk_storage.store_version(test_file, test_metadata)
@@ -52,6 +56,7 @@ def test_get_version_info(disk_storage, test_file, test_metadata):
     assert "original_path" in info
     assert "timestamp" in info
 
+
 def test_create_version_from_reference(disk_storage, storage_reference, test_metadata):
     """Test creating version from reference."""
     version_id = disk_storage.create_version_from_reference(storage_reference, test_metadata)
@@ -60,6 +65,7 @@ def test_create_version_from_reference(disk_storage, storage_reference, test_met
     info = disk_storage.get_version_info(version_id)
     assert info["creator"] == test_metadata["creator"]
     assert info["tool_version"] == test_metadata["tool_version"]
+
 
 def test_list_references(disk_storage, test_file, test_metadata):
     """Test listing storage references."""
@@ -72,6 +78,7 @@ def test_list_references(disk_storage, test_file, test_metadata):
     assert ref.path.exists()
     assert ref.metadata
 
+
 def test_error_handling(disk_storage):
     """Test error handling."""
     # Test non-existent version
@@ -80,6 +87,7 @@ def test_error_handling(disk_storage):
 
     with pytest.raises(FileNotFoundError):
         disk_storage.get_version_info("non_existent_id")
+
 
 def test_version_id_uniqueness(disk_storage, test_file, test_metadata):
     """Test that version IDs are unique."""

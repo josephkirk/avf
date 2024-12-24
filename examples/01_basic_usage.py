@@ -7,6 +7,7 @@ This example demonstrates:
 - Retrieving versions
 - Getting version info
 """
+
 from pathlib import Path
 
 from avf import AssetVersion, DiskStorage
@@ -15,9 +16,7 @@ from avf import AssetVersion, DiskStorage
 def main():
     # Set up storage directory
     storage_dir = Path("./storage")
-    storage = {
-        "disk": DiskStorage(storage_dir)
-    }
+    storage = {"disk": DiskStorage(storage_dir)}
 
     # Create version manager
     version_manager = AssetVersion(storage)
@@ -35,10 +34,8 @@ def main():
             "tool_version": "1.0",
             "description": "Initial version",
             "tags": ["test"],
-            "custom_data": {
-                "version": 1
-            }
-        }
+            "custom_data": {"version": 1},
+        },
     )
 
     # Update file content
@@ -53,10 +50,8 @@ def main():
             "tool_version": "1.0",
             "description": "Updated content",
             "tags": ["test", "updated"],
-            "custom_data": {
-                "version": 2
-            }
-        }
+            "custom_data": {"version": 2},
+        },
     )
 
     # Get info about versions
@@ -74,9 +69,7 @@ def main():
 
     # Retrieve an old version
     v1_path = version_manager.get_version(
-        "disk",
-        v1_ids["disk"].storage_id,
-        Path("restored_v1.txt")
+        "disk", v1_ids["disk"].storage_id, Path("restored_v1.txt")
     )
     print(f"\nRestored version 1 content: {v1_path.read_text()}")
 
@@ -84,6 +77,7 @@ def main():
     test_file.unlink()
     v1_path.unlink()
     storage_dir.rmdir()
+
 
 if __name__ == "__main__":
     main()

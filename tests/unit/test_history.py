@@ -1,4 +1,5 @@
 """Tests for asset history dumper."""
+
 from pathlib import Path
 
 from avf.utils.history import AssetHistoryDumper
@@ -9,16 +10,14 @@ def test_history_dumper_initialization(disk_storage):
     dumper = AssetHistoryDumper({"disk": disk_storage})
     assert dumper.storage_backends == {"disk": disk_storage}
 
+
 def test_collect_storage_references(disk_storage, test_file, test_metadata):
     """Test collecting references from storage."""
     dumper = AssetHistoryDumper({"disk": disk_storage})
 
     # Create some versions
     disk_storage.store_version(test_file, test_metadata)
-    disk_storage.store_version(test_file, {
-        **test_metadata,
-        "description": "Updated version"
-    })
+    disk_storage.store_version(test_file, {**test_metadata, "description": "Updated version"})
 
     refs = dumper._collect_storage_references(test_file)
     assert "disk" in refs
@@ -28,6 +27,7 @@ def test_collect_storage_references(disk_storage, test_file, test_metadata):
     refs = dumper._collect_storage_references(Path("non_existent.txt"))
     assert "disk" in refs
     assert len(refs["disk"]) == 0
+
 
 def test_build_storage_summary(disk_storage, test_file, test_metadata):
     """Test building storage summary."""
@@ -45,16 +45,14 @@ def test_build_storage_summary(disk_storage, test_file, test_metadata):
     assert summary["disk"]["versions"] > 0
     assert "references" in summary["disk"]
 
+
 def test_extract_timeline(disk_storage, test_file, test_metadata):
     """Test timeline extraction."""
     dumper = AssetHistoryDumper({"disk": disk_storage})
 
     # Create versions at different times
     disk_storage.store_version(test_file, test_metadata)
-    disk_storage.store_version(test_file, {
-        **test_metadata,
-        "description": "Updated version"
-    })
+    disk_storage.store_version(test_file, {**test_metadata, "description": "Updated version"})
 
     # Get references
     refs = dumper._collect_storage_references(test_file)
@@ -68,23 +66,17 @@ def test_extract_timeline(disk_storage, test_file, test_metadata):
         assert "reference_id" in event
         assert "metadata" in event
 
+
 def test_dump_history(disk_storage, test_file, test_metadata):
     """Test full history dump."""
     dumper = AssetHistoryDumper({"disk": disk_storage})
 
     # Create versions
     disk_storage.store_version(test_file, test_metadata)
-    disk_storage.store_version(test_file, {
-        **test_metadata,
-        "description": "Updated version"
-    })
+    disk_storage.store_version(test_file, {**test_metadata, "description": "Updated version"})
 
     # Dump history
-    history = dumper.dump_history(
-        test_file,
-        include_storage_data=True,
-        include_timeline=True
-    )
+    history = dumper.dump_history(test_file, include_storage_data=True, include_timeline=True)
 
     assert history["asset_path"] == str(test_file)
     assert "metadata" in history
@@ -103,12 +95,10 @@ def test_dump_history(disk_storage, test_file, test_metadata):
         assert "storage_type" in first_version
         assert "metadata" in first_version
 
+
 def test_multiple_storage_history(disk_storage, git_storage, test_file, test_metadata):
     """Test history dump with multiple storage backends."""
-    dumper = AssetHistoryDumper({
-        "disk": disk_storage,
-        "git": git_storage
-    })
+    dumper = AssetHistoryDumper({"disk": disk_storage, "git": git_storage})
 
     # Create versions in both storages
     disk_storage.store_version(test_file, test_metadata)
@@ -119,6 +109,7 @@ def test_multiple_storage_history(disk_storage, git_storage, test_file, test_met
 
     assert "disk" in history["metadata"]["storage_summary"]
     assert "git" in history["metadata"]["storage_summary"]
+
 
 def test_error_handling_in_history(disk_storage, test_file):
     """Test error handling during history collection."""

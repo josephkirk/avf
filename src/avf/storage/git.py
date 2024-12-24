@@ -1,4 +1,5 @@
 """Git-based storage backend implementation."""
+
 import json
 import os
 from pathlib import Path
@@ -98,8 +99,11 @@ class GitStorage(StorageBackend):
             self.repo.git.checkout(branch_name)
 
             # Find the asset file (should be only non-metadata file)
-            asset_files = [f for f in os.listdir(self.repo_path)
-                         if not f.endswith('.metadata.json') and f != 'README.md']
+            asset_files = [
+                f
+                for f in os.listdir(self.repo_path)
+                if not f.endswith(".metadata.json") and f != "README.md"
+            ]
 
             if not asset_files:
                 raise FileNotFoundError(f"No asset file found in version {version_id}")
@@ -140,8 +144,7 @@ class GitStorage(StorageBackend):
             self.repo.git.checkout(branch_name)
 
             # Find metadata file
-            metadata_files = [f for f in os.listdir(self.repo_path)
-                            if f.endswith('.metadata.json')]
+            metadata_files = [f for f in os.listdir(self.repo_path) if f.endswith(".metadata.json")]
 
             if not metadata_files:
                 raise FileNotFoundError(f"No metadata found for version {version_id}")
@@ -151,12 +154,14 @@ class GitStorage(StorageBackend):
 
             # Add Git-specific information
             commit = self.repo.head.commit
-            metadata.update({
-                "commit_hash": commit.hexsha,
-                "commit_date": commit.committed_datetime.isoformat(),
-                "commit_message": commit.message,
-                "branch": branch_name
-            })
+            metadata.update(
+                {
+                    "commit_hash": commit.hexsha,
+                    "commit_date": commit.committed_datetime.isoformat(),
+                    "commit_message": commit.message,
+                    "branch": branch_name,
+                }
+            )
 
             return metadata
 
@@ -167,9 +172,7 @@ class GitStorage(StorageBackend):
             original_branch.checkout()
 
     def create_version_from_reference(
-        self,
-        reference: StorageReference,
-        metadata: Dict[str, Any]
+        self, reference: StorageReference, metadata: Dict[str, Any]
     ) -> str:
         """Create a new version from existing content in storage
 
@@ -197,13 +200,15 @@ class GitStorage(StorageBackend):
             new_branch = self.repo.create_head(branch_name, commit)
 
             # Store additional metadata
-            metadata.update({
-                "commit_hash": commit.hexsha,
-                "commit_date": commit.committed_datetime.isoformat(),
-                "commit_message": commit.message,
-                "reference": reference.model_dump(),
-                "original_path": str(reference.path)
-            })
+            metadata.update(
+                {
+                    "commit_hash": commit.hexsha,
+                    "commit_date": commit.committed_datetime.isoformat(),
+                    "commit_message": commit.message,
+                    "reference": reference.model_dump(),
+                    "original_path": str(reference.path),
+                }
+            )
 
             # Checkout branch and add metadata
             original_branch = self.repo.active_branch
@@ -228,9 +233,7 @@ class GitStorage(StorageBackend):
             raise RuntimeError(f"Failed to create version from Git reference: {e}") from e
 
     def list_references(
-        self,
-        reference_type: Optional[str] = None,
-        path_pattern: Optional[str] = None
+        self, reference_type: Optional[str] = None, path_pattern: Optional[str] = None
     ) -> List[StorageReference]:
         """List available references in storage
 
@@ -254,23 +257,25 @@ class GitStorage(StorageBackend):
                     file_path = Path(item)
                     if path_pattern and path_pattern not in str(file_path):
                         continue
-                    if not file_path.name.endswith('.metadata.json'):
+                    if not file_path.name.endswith(".metadata.json"):
                         changed_files.append(file_path)
 
                 # Create reference for each changed file
                 for file_path in changed_files:
-                    refs.append(StorageReference(
-                        storage_type="git",
-                        storage_id=commit.hexsha,
-                        path=file_path,
-                        reference_type=ReferenceType.COMMIT,
-                        metadata={
-                            "commit_date": commit.committed_datetime.isoformat(),
-                            "commit_message": commit.message,
-                            "author": commit.author.name,
-                            "author_email": commit.author.email
-                        }
-                    ))
+                    refs.append(
+                        StorageReference(
+                            storage_type="git",
+                            storage_id=commit.hexsha,
+                            path=file_path,
+                            reference_type=ReferenceType.COMMIT,
+                            metadata={
+                                "commit_date": commit.committed_datetime.isoformat(),
+                                "commit_message": commit.message,
+                                "author": commit.author.name,
+                                "author_email": commit.author.email,
+                            },
+                        )
+                    )
 
         except GitCommandError as e:
             raise RuntimeError(f"Failed to list Git references: {e}") from e

@@ -7,7 +7,9 @@ import pytz
 from avf import AssetVersion, DiskStorage
 
 # Define the timezone
-timezone = pytz.timezone('Asia/Ho_Chi_Minh')
+timezone = pytz.timezone("Asia/Ho_Chi_Minh")
+
+
 def test_disk_storage_initialization():
     storage_path = Path("./test_storage")
     storage = DiskStorage(storage_path)
@@ -19,12 +21,11 @@ def test_disk_storage_initialization():
     if storage_path.exists():
         shutil.rmtree(storage_path)
 
+
 def test_version_creation():
     # Setup
     storage_path = Path("./test_storage")
-    storage_backends = {
-        "disk": DiskStorage(storage_path)
-    }
+    storage_backends = {"disk": DiskStorage(storage_path)}
 
     version_manager = AssetVersion(storage_backends)
 
@@ -39,7 +40,7 @@ def test_version_creation():
         "description": "Test version",
         "tags": ["test"],
         "custom_data": {"test_key": "test_value"},
-        "creation_time": datetime.now(tz=timezone)
+        "creation_time": datetime.now(tz=timezone),
     }
 
     try:
@@ -66,12 +67,11 @@ def test_version_creation():
         if storage_path.exists():
             shutil.rmtree(storage_path)
 
+
 def test_version_retrieval():
     # Setup similar to test_version_creation
     storage_path = Path("./test_storage")
-    storage_backends = {
-        "disk": DiskStorage(storage_path)
-    }
+    storage_backends = {"disk": DiskStorage(storage_path)}
     version_manager = AssetVersion(storage_backends)
     test_file = Path("./test_file.txt")
     test_content = "Test content for retrieval"
@@ -83,7 +83,7 @@ def test_version_retrieval():
         "description": "Test version",
         "tags": ["test"],
         "custom_data": {},
-        "creation_time": datetime.now(tz=timezone)
+        "creation_time": datetime.now(tz=timezone),
     }
 
     try:
@@ -94,9 +94,7 @@ def test_version_retrieval():
         # Test retrieval to new location
         retrieval_path = Path("./retrieved_file.txt")
         retrieved_path = version_manager.get_version(
-            "disk",
-            disk_version.storage_id,
-            retrieval_path
+            "disk", disk_version.storage_id, retrieval_path
         )
 
         # Verify content

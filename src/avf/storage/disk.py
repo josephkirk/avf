@@ -1,4 +1,5 @@
 """Disk-based storage backend implementation."""
+
 import hashlib
 import json
 import shutil
@@ -12,6 +13,7 @@ from .base import StorageBackend
 from .reference import ReferenceType, StorageReference
 
 timezone = pxzt.timezone()
+
 
 class DiskStorage(StorageBackend):
     def __init__(self, storage_root: Path):
@@ -62,10 +64,7 @@ class DiskStorage(StorageBackend):
         shutil.copy2(file_path, version_path)
 
         # Store metadata
-        metadata.update({
-            "original_path": str(file_path),
-            "timestamp": timestamp.isoformat()
-        })
+        metadata.update({"original_path": str(file_path), "timestamp": timestamp.isoformat()})
         metadata_path.write_text(json.dumps(metadata, indent=2))
 
         return version_id
@@ -110,9 +109,7 @@ class DiskStorage(StorageBackend):
         return json.loads(metadata_path.read_text())
 
     def create_version_from_reference(
-        self,
-        reference: StorageReference,
-        metadata: Dict[str, Any]
+        self, reference: StorageReference, metadata: Dict[str, Any]
     ) -> str:
         """Create a new version from existing content in storage
 
@@ -153,19 +150,19 @@ class DiskStorage(StorageBackend):
                 shutil.copy2(file_path, version_path)
 
         # Store metadata
-        metadata.update({
-            "original_path": str(file_path),
-            "timestamp": timestamp.isoformat(),
-            "reference": reference.model_dump()
-        })
+        metadata.update(
+            {
+                "original_path": str(file_path),
+                "timestamp": timestamp.isoformat(),
+                "reference": reference.model_dump(),
+            }
+        )
         metadata_path.write_text(json.dumps(metadata, indent=2))
 
         return version_id
 
     def list_references(
-        self,
-        reference_type: Optional[str] = None,
-        path_pattern: Optional[str] = None
+        self, reference_type: Optional[str] = None, path_pattern: Optional[str] = None
     ) -> List[StorageReference]:
         """List available references in storage
 
@@ -190,17 +187,19 @@ class DiskStorage(StorageBackend):
                 file_hash = hashlib.sha256()
                 file_hash.update(version_path.read_bytes())
 
-                refs.append(StorageReference(
-                    storage_type="disk",
-                    storage_id=file_hash.hexdigest(),
-                    path=version_path,
-                    reference_type=ReferenceType.FILE,
-                    metadata={
-                        "size": version_path.stat().st_size,
-                        "modified": datetime.fromtimestamp(
-                            version_path.stat().st_mtime, tz=timezone
-                        ).isoformat()
-                    }
-                ))
+                refs.append(
+                    StorageReference(
+                        storage_type="disk",
+                        storage_id=file_hash.hexdigest(),
+                        path=version_path,
+                        reference_type=ReferenceType.FILE,
+                        metadata={
+                            "size": version_path.stat().st_size,
+                            "modified": datetime.fromtimestamp(
+                                version_path.stat().st_mtime, tz=timezone
+                            ).isoformat(),
+                        },
+                    )
+                )
 
         return refs

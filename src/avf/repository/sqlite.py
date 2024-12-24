@@ -23,7 +23,7 @@ class SQLiteVersionRepository(VersionRepository):
         tool_version: str,
         description: Optional[str],
         tags: List[str],
-        custom_data: Dict[str, Any]
+        custom_data: Dict[str, Any],
     ) -> int:
         with self.db.session() as session:
             # Create or get tags
@@ -42,23 +42,16 @@ class SQLiteVersionRepository(VersionRepository):
                 tool_version=tool_version,
                 description=description,
                 custom_data=custom_data,
-                tags=tag_objects
+                tags=tag_objects,
             )
             session.add(version)
             session.commit()
             return version.id
 
-    def add_storage_location(
-        self,
-        version_id: int,
-        storage_type: str,
-        storage_id: str
-    ) -> None:
+    def add_storage_location(self, version_id: int, storage_type: str, storage_id: str) -> None:
         with self.db.session() as session:
             storage = VersionStorage(
-                version_id=version_id,
-                storage_type=storage_type,
-                storage_id=storage_id
+                version_id=version_id, storage_type=storage_type, storage_id=storage_id
             )
             session.add(storage)
 
@@ -80,7 +73,7 @@ class SQLiteVersionRepository(VersionRepository):
         tags: Optional[List[str]] = None,
         creator: Optional[str] = None,
         after: Optional[datetime] = None,
-        before: Optional[datetime] = None
+        before: Optional[datetime] = None,
     ) -> List[Dict[str, Any]]:
         with self.db.session() as session:
             query = session.query(Version)
@@ -142,7 +135,7 @@ class SQLiteVersionRepository(VersionRepository):
         version_id: int,
         description: Optional[str] = None,
         tags: Optional[List[str]] = None,
-        custom_data: Optional[Dict[str, Any]] = None
+        custom_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Update version metadata
 

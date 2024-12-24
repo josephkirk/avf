@@ -13,7 +13,7 @@ class VersionRepository(ABC):
         tool_version: str,
         description: Optional[str],
         tags: List[str],
-        custom_data: Dict[str, Any]
+        custom_data: Dict[str, Any],
     ) -> int:
         """Create a new version entry
 
@@ -31,12 +31,7 @@ class VersionRepository(ABC):
         pass
 
     @abstractmethod
-    def add_storage_location(
-        self,
-        version_id: int,
-        storage_type: str,
-        storage_id: str
-    ) -> None:
+    def add_storage_location(self, version_id: int, storage_type: str, storage_id: str) -> None:
         """Add storage location for a version
 
         Args:
@@ -77,7 +72,7 @@ class VersionRepository(ABC):
         tags: Optional[List[str]] = None,
         creator: Optional[str] = None,
         after: Optional[datetime] = None,
-        before: Optional[datetime] = None
+        before: Optional[datetime] = None,
     ) -> List[Dict[str, Any]]:
         """Find versions matching criteria
 

@@ -1,4 +1,5 @@
 """Main AssetVersion manager module."""
+
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -13,19 +14,22 @@ from .utils.history import AssetHistoryDumper
 
 logger = structlog.get_logger()
 
+
 class VersionIdentifier(BaseModel):
     """Identifier for a specific version in a storage backend"""
+
     storage_type: str
     storage_id: str
     file_path: Path
     timestamp: datetime
     metadata: AssetMetadata
 
+
 class AssetVersion:
     def __init__(
         self,
         storage_backends: Dict[str, StorageBackend],
-        version_repository: Optional[VersionRepository] = None
+        version_repository: Optional[VersionRepository] = None,
     ):
         """Initialize AssetVersion manager
 
@@ -43,7 +47,7 @@ class AssetVersion:
         file_path: Path,
         include_storage_data: bool = True,
         include_timeline: bool = True,
-        version_id: Optional[int] = None
+        version_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Dump complete version history of an asset.
 
@@ -58,10 +62,7 @@ class AssetVersion:
         """
         # Get basic history from storage backends
         history = self.history_dumper.dump_history(
-            file_path,
-            include_storage_data,
-            include_timeline,
-            version_id
+            file_path, include_storage_data, include_timeline, version_id
         )
 
         # Add repository data if available
@@ -95,10 +96,12 @@ class AssetVersion:
 
                 # Update metadata
                 if versions:
-                    history["metadata"].update({
-                        "repository_latest_version": versions[-1]["id"],
-                        "repository_total_versions": len(versions)
-                    })
+                    history["metadata"].update(
+                        {
+                            "repository_latest_version": versions[-1]["id"],
+                            "repository_total_versions": len(versions),
+                        }
+                    )
 
             except Exception as e:
                 self.logger.error("Failed to get repository data", error=str(e))

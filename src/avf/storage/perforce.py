@@ -1,4 +1,5 @@
 """Perforce-based storage backend implementation."""
+
 import json
 import os
 import tempfile
@@ -14,6 +15,7 @@ from .reference import ReferenceType, StorageReference
 
 timezone = pxtz.timezone()
 
+
 class PerforceStorage(StorageBackend):
     def __init__(
         self,
@@ -22,7 +24,7 @@ class PerforceStorage(StorageBackend):
         client: str,
         workspace_root: Path,
         password: Optional[str] = None,
-        charset: str = "none"
+        charset: str = "none",
     ):
         """Initialize Perforce storage
 
@@ -60,7 +62,7 @@ class PerforceStorage(StorageBackend):
                     "Owner": user,
                     "Description": "Asset version metadata storage",
                     "Type": "local",
-                    "Map": "asset_versions/..."
+                    "Map": "asset_versions/...",
                 }
                 self.p4.save_depot("asset_versions", depot_spec)
 
@@ -93,7 +95,7 @@ class PerforceStorage(StorageBackend):
             # Create new changelist
             change_spec = {
                 "Description": f"Store version of {file_path.name}\n\nManaged by AVF",
-                "Files": []
+                "Files": [],
             }
             result = p4.save_change(change_spec)
             changelist = result[0].split()[1]  # Get changelist number
@@ -107,13 +109,15 @@ class PerforceStorage(StorageBackend):
                 p4.run("edit", "-c", changelist, str(file_path))
 
             # Store metadata
-            metadata.update({
-                "original_path": str(file_path),
-                "changelist": changelist,
-                "timestamp": datetime.now(tz=timezone).isoformat()
-            })
+            metadata.update(
+                {
+                    "original_path": str(file_path),
+                    "changelist": changelist,
+                    "timestamp": datetime.now(tz=timezone).isoformat(),
+                }
+            )
 
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tf:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
                 json.dump(metadata, tf, indent=2)
                 metadata_file = tf.name
 
@@ -132,7 +136,7 @@ class PerforceStorage(StorageBackend):
         except P4Exception as e:
             raise RuntimeError(f"Failed to store version in Perforce: {e}") from e
         finally:
-            if 'metadata_file' in locals():
+            if "metadata_file" in locals():
                 os.unlink(metadata_file)
             p4.disconnect()
 
@@ -155,18 +159,19 @@ class PerforceStorage(StorageBackend):
 
             # Filter out metadata files
             asset_files = [
-                f for f in files if not str(f['depotFile']).startswith(self.metadata_path)]
+                f for f in files if not str(f["depotFile"]).startswith(self.metadata_path)
+            ]
             if not asset_files:
                 raise FileNotFoundError(f"No asset files found in changelist {version_id}")
 
             # Get the file
-            depot_file = asset_files[0]['depotFile']
+            depot_file = asset_files[0]["depotFile"]
             if target_path:
                 p4.run_print("-o", str(target_path), f"{depot_file}@{version_id}")
                 result_path = target_path
             else:
                 # Use workspace path
-                local_path = p4.run_fstat(f"{depot_file}@{version_id}")[0]['clientFile']
+                local_path = p4.run_fstat(f"{depot_file}@{version_id}")[0]["clientFile"]
                 p4.run_sync(f"{depot_file}@{version_id}")
                 result_path = Path(local_path)
 
@@ -197,13 +202,15 @@ class PerforceStorage(StorageBackend):
 
                 # Add Perforce-specific information
                 change = p4.run_describe(version_id)[0]
-                metadata.update({
-                    "changelist": version_id,
-                    "description": change.get('desc', ''),
-                    "user": change.get('user', ''),
-                    "client": change.get('client', ''),
-                    "time": change.get('time', '')
-                })
+                metadata.update(
+                    {
+                        "changelist": version_id,
+                        "description": change.get("desc", ""),
+                        "user": change.get("user", ""),
+                        "client": change.get("client", ""),
+                        "time": change.get("time", ""),
+                    }
+                )
 
                 return metadata
 
@@ -214,9 +221,7 @@ class PerforceStorage(StorageBackend):
             p4.disconnect()
 
     def create_version_from_reference(
-        self,
-        reference: StorageReference,
-        metadata: Dict[str, Any]
+        self, reference: StorageReference, metadata: Dict[str, Any]
     ) -> str:
         """Create a new version from existing content in storage
 
@@ -247,34 +252,37 @@ class PerforceStorage(StorageBackend):
             change_spec = {
                 "Description": f"Add metadata for {reference.path}\n\nReferencing CL: {
                     reference.storage_id}",
-                "Files": []
+                "Files": [],
             }
             result = p4.save_change(change_spec)
             new_changelist = result[0].split()[1]
 
             # Add metadata
-            metadata.update({
-                "original_changelist": reference.storage_id,
-                "original_path": str(reference.path),
-                "reference": reference.model_dump(),
-                "timestamp": datetime.now(tz=timezone).isoformat(),
-                "source_change": {
-                    "description": change.get('desc', ''),
-                    "user": change.get('user', ''),
-                    "client": change.get('client', ''),
-                    "time": change.get('time', '')
+            metadata.update(
+                {
+                    "original_changelist": reference.storage_id,
+                    "original_path": str(reference.path),
+                    "reference": reference.model_dump(),
+                    "timestamp": datetime.now(tz=timezone).isoformat(),
+                    "source_change": {
+                        "description": change.get("desc", ""),
+                        "user": change.get("user", ""),
+                        "client": change.get("client", ""),
+                        "time": change.get("time", ""),
+                    },
                 }
-            })
+            )
 
             # Store metadata
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tf:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
                 json.dump(metadata, tf, indent=2)
                 metadata_file = tf.name
 
             try:
                 metadata_depot_path = self._get_metadata_path(new_changelist)
                 p4.run(
-                    "add", "-c", new_changelist, "-t", "text", metadata_file, metadata_depot_path)
+                    "add", "-c", new_changelist, "-t", "text", metadata_file, metadata_depot_path
+                )
                 p4.run_submit("-c", new_changelist)
             except P4Exception as e:
                 os.unlink(metadata_file)
@@ -285,14 +293,12 @@ class PerforceStorage(StorageBackend):
         except P4Exception as e:
             raise RuntimeError(f"Failed to create version from Perforce reference: {e}") from e
         finally:
-            if 'metadata_file' in locals():
+            if "metadata_file" in locals():
                 os.unlink(metadata_file)
             p4.disconnect()
 
     def list_references(
-        self,
-        reference_type: Optional[str] = None,
-        path_pattern: Optional[str] = None
+        self, reference_type: Optional[str] = None, path_pattern: Optional[str] = None
     ) -> List[StorageReference]:
         """List available references in storage
 
@@ -314,12 +320,13 @@ class PerforceStorage(StorageBackend):
             changes = p4.run_changes("-l", "//depot/...")
 
             for change in changes:
-                changelist = change['change']
+                changelist = change["change"]
 
                 # Get files in changelist
                 files = p4.run_files(f"@={changelist}")
                 asset_files = [
-                    f for f in files if not str(f['depotFile']).startswith(self.metadata_path)]
+                    f for f in files if not str(f["depotFile"]).startswith(self.metadata_path)
+                ]
 
                 # Skip metadata-only changes
                 if not asset_files:
@@ -327,23 +334,25 @@ class PerforceStorage(StorageBackend):
 
                 # Create reference for each file
                 for file in asset_files:
-                    depot_path = file['depotFile']
+                    depot_path = file["depotFile"]
                     if path_pattern and path_pattern not in depot_path:
                         continue
 
-                    refs.append(StorageReference(
-                        storage_type="perforce",
-                        storage_id=changelist,
-                        path=Path(depot_path),
-                        reference_type=ReferenceType.CHANGELIST,
-                        metadata={
-                            "description": change.get('desc', ''),
-                            "user": change.get('user', ''),
-                            "client": change.get('client', ''),
-                            "time": change.get('time', ''),
-                            "action": file.get('action', '')
-                        }
-                    ))
+                    refs.append(
+                        StorageReference(
+                            storage_type="perforce",
+                            storage_id=changelist,
+                            path=Path(depot_path),
+                            reference_type=ReferenceType.CHANGELIST,
+                            metadata={
+                                "description": change.get("desc", ""),
+                                "user": change.get("user", ""),
+                                "client": change.get("client", ""),
+                                "time": change.get("time", ""),
+                                "action": file.get("action", ""),
+                            },
+                        )
+                    )
 
         except P4Exception as e:
             raise RuntimeError(f"Failed to list Perforce references: {e}") from e

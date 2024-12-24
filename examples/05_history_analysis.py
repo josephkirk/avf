@@ -7,6 +7,7 @@ This example demonstrates:
 - Tracking asset changes
 - Generating history reports
 """
+
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -19,54 +20,56 @@ def print_history_summary(history):
     print("\nHistory Summary:")
     print(f"Asset: {history['asset_path']}")
 
-    if 'metadata' in history:
-        meta = history['metadata']
+    if "metadata" in history:
+        meta = history["metadata"]
         print("\nMetadata:")
-        if 'first_version' in meta:
+        if "first_version" in meta:
             print(f"First Version: {meta['first_version']}")
-        if 'latest_version' in meta:
+        if "latest_version" in meta:
             print(f"Latest Version: {meta['latest_version']}")
-        if 'total_references' in meta:
+        if "total_references" in meta:
             print(f"Total References: {meta['total_references']}")
 
-        if 'storage_summary' in meta:
+        if "storage_summary" in meta:
             print("\nStorage Summary:")
-            for storage_type, summary in meta['storage_summary'].items():
+            for storage_type, summary in meta["storage_summary"].items():
                 print(f"\n{storage_type}:")
                 for key, value in summary.items():
                     print(f"- {key}: {value}")
 
+
 def print_timeline(history):
     """Helper to print version timeline."""
-    if 'timeline' not in history:
+    if "timeline" not in history:
         return
 
     print("\nVersion Timeline:")
-    for event in history['timeline']:
-        timestamp = event.get('timestamp', 'Unknown')
-        action = event.get('action', 'Unknown')
-        storage = event.get('storage_type', 'Unknown')
+    for event in history["timeline"]:
+        timestamp = event.get("timestamp", "Unknown")
+        action = event.get("action", "Unknown")
+        storage = event.get("storage_type", "Unknown")
         print(f"{timestamp}: {action} in {storage}")
-        if 'metadata' in event:
+        if "metadata" in event:
             print("  Metadata:")
-            for key, value in event['metadata'].items():
+            for key, value in event["metadata"].items():
                 print(f"  - {key}: {value}")
+
 
 def analyze_version_patterns(history):
     """Analyze version creation patterns."""
-    if 'timeline' not in history:
+    if "timeline" not in history:
         return
 
     print("\nVersion Pattern Analysis:")
 
     # Analyze version frequency
-    events = history['timeline']
+    events = history["timeline"]
     if len(events) > 1:
         intervals = []
         for i in range(1, len(events)):
             try:
-                t1 = datetime.fromisoformat(events[i-1]['timestamp'])
-                t2 = datetime.fromisoformat(events[i]['timestamp'])
+                t1 = datetime.fromisoformat(events[i - 1]["timestamp"])
+                t2 = datetime.fromisoformat(events[i]["timestamp"])
                 intervals.append((t2 - t1).total_seconds())
             except (ValueError, KeyError):
                 continue
@@ -78,7 +81,7 @@ def analyze_version_patterns(history):
     # Analyze storage usage
     storage_counts = {}
     for event in events:
-        storage = event.get('storage_type')
+        storage = event.get("storage_type")
         if storage:
             storage_counts[storage] = storage_counts.get(storage, 0) + 1
 
@@ -86,11 +89,12 @@ def analyze_version_patterns(history):
     for storage, count in storage_counts.items():
         print(f"- {storage}: {count} versions")
 
+
 def main():
     # Set up storage backends
     storage = {
         "disk": DiskStorage(Path("./disk_storage")),
-        "git": GitStorage(Path("./git_storage"))
+        "git": GitStorage(Path("./git_storage")),
     }
 
     # Set up database
@@ -99,10 +103,7 @@ def main():
     repo = SQLiteVersionRepository(db)
 
     # Create version manager
-    version_manager = AssetVersion(
-        storage_backends=storage,
-        version_repository=repo
-    )
+    version_manager = AssetVersion(storage_backends=storage, version_repository=repo)
 
     # Create test asset with multiple versions
     test_file = Path("test_asset.ma")
@@ -118,10 +119,8 @@ def main():
             "tool_version": "maya_2024",
             "description": "Initial version",
             "tags": ["model", "character"],
-            "custom_data": {
-                "polygon_count": 15000
-            }
-        }
+            "custom_data": {"polygon_count": 15000},
+        },
     )
 
     # Version 2 (after a day)
@@ -133,10 +132,8 @@ def main():
             "tool_version": "maya_2024",
             "description": "Optimized model",
             "tags": ["model", "character", "optimized"],
-            "custom_data": {
-                "polygon_count": 12000
-            }
-        }
+            "custom_data": {"polygon_count": 12000},
+        },
     )
 
     # Version 3 (minor update)
@@ -148,19 +145,14 @@ def main():
             "tool_version": "maya_2024",
             "description": "Fixed UVs",
             "tags": ["model", "character", "uv_fix"],
-            "custom_data": {
-                "polygon_count": 12000,
-                "uv_shells": 12
-            }
-        }
+            "custom_data": {"polygon_count": 12000, "uv_shells": 12},
+        },
     )
 
     # Get and analyze history
     print("\nCollecting version history...")
     history = version_manager.dump_asset_history(
-        test_file,
-        include_storage_data=True,
-        include_timeline=True
+        test_file, include_storage_data=True, include_timeline=True
     )
 
     # Print basic summary
@@ -173,23 +165,23 @@ def main():
     analyze_version_patterns(history)
 
     # Analyze metadata changes
-    if 'storage_versions' in history:
+    if "storage_versions" in history:
         print("\nMetadata Evolution:")
-        versions = history['storage_versions']
+        versions = history["storage_versions"]
         for version in versions:
             print(f"\nVersion in {version['storage_type']}:")
-            metadata = version['metadata']
+            metadata = version["metadata"]
             print(f"- Creator: {metadata.get('creator', 'Unknown')}")
             print(f"- Description: {metadata.get('description', 'Unknown')}")
-            if 'custom_data' in metadata:
+            if "custom_data" in metadata:
                 print("- Custom Data:")
-                for key, value in metadata['custom_data'].items():
+                for key, value in metadata["custom_data"].items():
                     print(f"  {key}: {value}")
 
     # Save history to file
     history_file = Path("asset_history.json")
     print(f"\nSaving history to {history_file}...")
-    with open(history_file, 'w') as f:
+    with open(history_file, "w") as f:
         json.dump(history, f, indent=2)
 
     # Cleanup
@@ -199,7 +191,7 @@ def main():
         history_file,
         Path("./disk_storage"),
         Path("./git_storage"),
-        Path("versions.db")
+        Path("versions.db"),
     ]
     for path in cleanup_paths:
         try:
@@ -207,9 +199,11 @@ def main():
                 path.unlink()
             elif path.is_dir():
                 import shutil
+
                 shutil.rmtree(path)
         except Exception as e:
             print(f"Error cleaning up {path}: {e}")
+
 
 if __name__ == "__main__":
     main()

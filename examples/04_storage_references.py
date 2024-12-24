@@ -7,6 +7,7 @@ This example demonstrates:
 - Listing available references
 - Cross-referencing versions
 """
+
 from pathlib import Path
 
 from avf import AssetVersion, DiskStorage, GitStorage, ReferenceType, StorageReference
@@ -23,11 +24,12 @@ def print_reference_info(ref):
     for key, value in ref.metadata.items():
         print(f"  {key}: {value}")
 
+
 def main():
     # Set up storage backends
     storage = {
         "disk": DiskStorage(Path("./disk_storage")),
-        "git": GitStorage(Path("./git_storage"))
+        "git": GitStorage(Path("./git_storage")),
     }
 
     # Create version manager
@@ -52,10 +54,7 @@ def main():
         storage_id="existing_model",
         path=model_file,
         reference_type=ReferenceType.FILE,
-        metadata={
-            "size": len(model_file.read_bytes()),
-            "original_path": str(model_file)
-        }
+        metadata={"size": len(model_file.read_bytes()), "original_path": str(model_file)},
     )
 
     # Create version from model reference
@@ -67,11 +66,8 @@ def main():
             "tool_version": "maya_2024",
             "description": "Imported existing model",
             "tags": ["model", "imported"],
-            "custom_data": {
-                "source": "external",
-                "import_date": "2024-01-15"
-            }
-        }
+            "custom_data": {"source": "external", "import_date": "2024-01-15"},
+        },
     )
 
     # List all references in disk storage
@@ -95,7 +91,7 @@ def main():
             "creator": "john_doe",
             "tool_version": "git_1.0",
             "description": "Initial commit",
-        }
+        },
     )
 
     # List Git references
@@ -110,10 +106,7 @@ def main():
         storage_id=git_version,  # Use commit hash
         path=asset_file,
         reference_type=ReferenceType.COMMIT,
-        metadata={
-            "commit_hash": git_version,
-            "branch": "main"
-        }
+        metadata={"commit_hash": git_version, "branch": "main"},
     )
 
     print("\nCreating version from Git reference...")
@@ -124,11 +117,8 @@ def main():
             "tool_version": "git_1.0",
             "description": "Version from existing commit",
             "tags": ["imported", "git"],
-            "custom_data": {
-                "source_commit": git_version,
-                "import_date": "2024-01-15"
-            }
-        }
+            "custom_data": {"source_commit": git_version, "import_date": "2024-01-15"},
+        },
     )
 
     # Demonstrate cross-storage referencing
@@ -142,11 +132,8 @@ def main():
             "tool_version": "git_1.0",
             "description": "Imported from Git",
             "tags": ["imported", "cross-storage"],
-            "custom_data": {
-                "source_storage": "git",
-                "source_id": git_version
-            }
-        }
+            "custom_data": {"source_storage": "git", "source_id": git_version},
+        },
     )
 
     # Print version information
@@ -163,20 +150,18 @@ def main():
 
     # Cleanup
     print("\nCleaning up...")
-    cleanup_paths = [
-        base_path,
-        Path("./disk_storage"),
-        Path("./git_storage")
-    ]
+    cleanup_paths = [base_path, Path("./disk_storage"), Path("./git_storage")]
     for path in cleanup_paths:
         try:
             if path.is_file():
                 path.unlink()
             elif path.is_dir():
                 import shutil
+
                 shutil.rmtree(path)
         except Exception as e:
             print(f"Error cleaning up {path}: {e}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
 """Test fixtures for AVF."""
+
 import shutil
 import tempfile
 from pathlib import Path
@@ -22,12 +23,14 @@ def temp_dir():
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield Path(tmp_dir)
 
+
 @pytest.fixture(scope="function")
 def test_file(temp_dir):
     """Create a test file."""
     file_path = temp_dir / "test_file.txt"
     file_path.write_text("Test content")
     yield file_path
+
 
 @pytest.fixture(scope="function")
 def test_metadata():
@@ -37,15 +40,15 @@ def test_metadata():
         "tool_version": "test_1.0",
         "description": "Test description",
         "tags": ["test", "unit"],
-        "custom_data": {
-            "key": "value"
-        }
+        "custom_data": {"key": "value"},
     }
+
 
 @pytest.fixture(scope="function")
 def valid_metadata(test_metadata):
     """Create valid AssetMetadata instance."""
     return AssetMetadata(**test_metadata)
+
 
 @pytest.fixture(scope="function")
 def disk_storage(temp_dir):
@@ -54,12 +57,14 @@ def disk_storage(temp_dir):
     storage = DiskStorage(storage_path)
     return storage
 
+
 @pytest.fixture(scope="function")
 def git_storage(temp_dir):
     """Create git storage backend."""
     repo_path = temp_dir / "git_storage"
     storage = GitStorage(repo_path)
     yield storage
+
 
 @pytest.fixture(scope="function")
 def db_connection(temp_dir):
@@ -74,10 +79,12 @@ def db_connection(temp_dir):
     except Exception:
         pass
 
+
 @pytest.fixture(scope="function")
 def version_repo(db_connection):
     """Create test version repository."""
     return SQLiteVersionRepository(db_connection)
+
 
 @pytest.fixture(scope="function")
 def storage_reference(test_file):
@@ -87,8 +94,9 @@ def storage_reference(test_file):
         storage_id="test_id",
         path=test_file,
         reference_type=ReferenceType.FILE,
-        metadata={}
+        metadata={},
     )
+
 
 @pytest.fixture(scope="function")
 def cleanup_temp_files():
