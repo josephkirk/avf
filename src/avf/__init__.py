@@ -1,21 +1,21 @@
-"""Asset Version Framework - A comprehensive asset versioning system for game development pipelines"""
+"""Asset Version Framework"""
 
-from .version import AssetVersion, VersionIdentifier
-from .storage import DiskStorage, GitStorage, StorageBackend
-from .repository import SQLiteVersionRepository, VersionRepository
 from .database import DatabaseConnection
 from .metadata import AssetMetadata
+from .repository import SQLiteVersionRepository, VersionRepository
+from .storage import DiskStorage, GitStorage, StorageBackend
+from .version import AssetVersion, VersionIdentifier
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "AssetMetadata",
     "AssetVersion",
-    "VersionIdentifier",
+    "DatabaseConnection",
     "DiskStorage",
     "GitStorage",
-    "StorageBackend",
     "SQLiteVersionRepository",
+    "StorageBackend",
+    "VersionIdentifier",
     "VersionRepository",
-    "DatabaseConnection",
-    "AssetMetadata",
 ]

@@ -8,7 +8,9 @@ This example demonstrates:
 - Getting version info
 """
 from pathlib import Path
+
 from avf import AssetVersion, DiskStorage
+
 
 def main():
     # Set up storage directory

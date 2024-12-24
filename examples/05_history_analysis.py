@@ -7,22 +7,18 @@ This example demonstrates:
 - Tracking asset changes
 - Generating history reports
 """
-from pathlib import Path
 import json
 from datetime import datetime, timedelta
-from avf import (
-    AssetVersion,
-    DiskStorage,
-    GitStorage,
-    DatabaseConnection,
-    SQLiteVersionRepository
-)
+from pathlib import Path
+
+from avf import AssetVersion, DatabaseConnection, DiskStorage, GitStorage, SQLiteVersionRepository
+
 
 def print_history_summary(history):
     """Helper to print history summary."""
     print("\nHistory Summary:")
     print(f"Asset: {history['asset_path']}")
-    
+
     if 'metadata' in history:
         meta = history['metadata']
         print("\nMetadata:")
@@ -62,7 +58,7 @@ def analyze_version_patterns(history):
         return
 
     print("\nVersion Pattern Analysis:")
-    
+
     # Analyze version frequency
     events = history['timeline']
     if len(events) > 1:
@@ -74,7 +70,7 @@ def analyze_version_patterns(history):
                 intervals.append((t2 - t1).total_seconds())
             except (ValueError, KeyError):
                 continue
-        
+
         if intervals:
             avg_interval = sum(intervals) / len(intervals)
             print(f"Average time between versions: {timedelta(seconds=avg_interval)}")
@@ -85,7 +81,7 @@ def analyze_version_patterns(history):
         storage = event.get('storage_type')
         if storage:
             storage_counts[storage] = storage_counts.get(storage, 0) + 1
-    
+
     print("\nStorage Usage:")
     for storage, count in storage_counts.items():
         print(f"- {storage}: {count} versions")
@@ -110,7 +106,7 @@ def main():
 
     # Create test asset with multiple versions
     test_file = Path("test_asset.ma")
-    
+
     print("Creating test versions...")
 
     # Version 1

@@ -8,17 +8,13 @@ This example demonstrates:
 - Cross-referencing versions
 """
 from pathlib import Path
-from avf import (
-    AssetVersion,
-    DiskStorage,
-    GitStorage,
-    StorageReference,
-    ReferenceType
-)
+
+from avf import AssetVersion, DiskStorage, GitStorage, ReferenceType, StorageReference
+
 
 def print_reference_info(ref):
     """Helper to print reference information."""
-    print(f"\nReference:")
+    print("\nReference:")
     print(f"- Storage Type: {ref.storage_type}")
     print(f"- Storage ID: {ref.storage_id}")
     print(f"- Path: {ref.path}")
@@ -35,7 +31,7 @@ def main():
     }
 
     # Create version manager
-    version_manager = AssetVersion(storage)
+    AssetVersion(storage)
 
     # Create some existing files
     base_path = Path("./existing_files")
@@ -49,7 +45,7 @@ def main():
 
     # Create storage references
     print("Creating storage references...")
-    
+
     # Reference for existing model
     model_ref = StorageReference(
         storage_type="disk",
@@ -64,7 +60,7 @@ def main():
 
     # Create version from model reference
     print("\nCreating version from model reference...")
-    model_version = storage["disk"].create_version_from_reference(
+    storage["disk"].create_version_from_reference(
         reference=model_ref,
         metadata={
             "creator": "jane_doe",
@@ -137,7 +133,7 @@ def main():
 
     # Demonstrate cross-storage referencing
     print("\nDemonstrating cross-storage version creation...")
-    
+
     # Create version in disk storage from Git content
     disk_from_git = storage["disk"].store_version(
         asset_file,

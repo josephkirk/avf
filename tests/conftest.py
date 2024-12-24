@@ -1,19 +1,20 @@
 """Test fixtures for AVF."""
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
-from datetime import datetime
+
+import pytest
 
 from avf import (
-    DiskStorage, 
-    GitStorage, 
+    AssetMetadata,
     DatabaseConnection,
+    DiskStorage,
+    GitStorage,
+    ReferenceType,
     SQLiteVersionRepository,
     StorageReference,
-    ReferenceType,
-    AssetMetadata
 )
+
 
 @pytest.fixture(scope="function")
 def temp_dir():
@@ -93,7 +94,7 @@ def storage_reference(test_file):
 def cleanup_temp_files():
     """Cleanup any temporary files after tests."""
     yield
-    
+
     # Cleanup patterns that might not be caught by temp_dir
     patterns = ["test_*.txt", "*.db", "*.sqlite"]
     for pattern in patterns:

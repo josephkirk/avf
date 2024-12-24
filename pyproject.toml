@@ -80,7 +80,7 @@ packages = ["avf"]
 [tool.ruff]
 line-length = 100
 target-version = "py38"
-select = [
+lint.select = [
     "E",   # pycodestyle errors
     "F",   # pyflakes
     "I",   # isort

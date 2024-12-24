@@ -1,8 +1,10 @@
 """Storage reference types for version creation from existing storage."""
-from enum import Enum, auto
-from typing import Dict, Any
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict
+
 from pydantic import BaseModel, Field
+
 
 class ReferenceType(str, Enum):
     """Types of storage references."""

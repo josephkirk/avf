@@ -8,7 +8,9 @@ This example demonstrates:
 - Comparing versions across storages
 """
 from pathlib import Path
+
 from avf import AssetVersion, DiskStorage, GitStorage
+
 
 def main():
     # Set up storage backends
@@ -73,14 +75,14 @@ def main():
 
     # Compare versions from different storages
     print("\nComparing versions across storages:")
-    
+
     # Get v1 from disk
     v1_disk = version_manager.get_version(
         "disk",
         v1_ids["disk"].storage_id,
         Path("v1_from_disk.fbx")
     )
-    
+
     # Get v2 from git
     v2_git = version_manager.get_version(
         "git",

@@ -5,7 +5,7 @@ from .disk import DiskStorage
 from .git import GitStorage
 
 __all__ = [
-    "StorageBackend",
     "DiskStorage",
     "GitStorage",
+    "StorageBackend",
 ]

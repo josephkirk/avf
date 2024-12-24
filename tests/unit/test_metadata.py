@@ -1,15 +1,17 @@
 """Tests for metadata models."""
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from avf.metadata import AssetMetadata
+
 
 def test_create_valid_metadata(test_metadata, valid_metadata):
     """Test creating metadata with valid data."""
     # Test dictionary to model conversion
     metadata = AssetMetadata(**test_metadata)
-    
+
     assert metadata.creator == test_metadata["creator"]
     assert metadata.tool_version == test_metadata["tool_version"]
     assert metadata.description == test_metadata["description"]
@@ -27,11 +29,11 @@ def test_metadata_required_fields():
         AssetMetadata()
     assert "creator" in str(exc_info.value)
     assert "tool_version" in str(exc_info.value)
-        
+
     with pytest.raises(ValidationError) as exc_info:
         AssetMetadata(creator="test_user")
     assert "tool_version" in str(exc_info.value)
-        
+
     with pytest.raises(ValidationError) as exc_info:
         AssetMetadata(tool_version="test_1.0")
     assert "creator" in str(exc_info.value)
@@ -42,7 +44,7 @@ def test_metadata_optional_fields():
         creator="test_user",
         tool_version="test_1.0"
     )
-    
+
     assert metadata.description is None
     assert metadata.tags == []
     assert metadata.custom_data == {}
@@ -56,7 +58,7 @@ def test_metadata_field_types():
             tool_version="test_1.0"
         )
     assert "creator" in str(exc_info.value)
-        
+
     with pytest.raises(ValidationError) as exc_info:
         AssetMetadata(
             creator="test_user",
@@ -92,7 +94,7 @@ def test_metadata_examples():
     """Test metadata model example configuration."""
     example = AssetMetadata.model_config["json_schema_extra"]["example"]
     assert isinstance(example, dict)
-    
+
     # Test example is valid
     metadata = AssetMetadata(**example)
     assert metadata.creator == example["creator"]

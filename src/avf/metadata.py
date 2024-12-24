@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class AssetMetadata(BaseModel):
     """Metadata for asset versions"""
@@ -9,14 +11,14 @@ class AssetMetadata(BaseModel):
     description: Optional[str] = Field(None, description="Optional description")
     tags: List[str] = Field(default_factory=list, description="List of tags")
     custom_data: Dict[str, Any] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="Additional metadata"
     )
     creation_time: datetime = Field(
         default_factory=datetime.now,
         description="Creation timestamp"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "example": {

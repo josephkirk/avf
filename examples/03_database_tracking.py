@@ -8,12 +8,9 @@ This example demonstrates:
 - Finding versions by criteria
 """
 from pathlib import Path
-from avf import (
-    AssetVersion,
-    DiskStorage,
-    DatabaseConnection,
-    SQLiteVersionRepository
-)
+
+from avf import AssetVersion, DatabaseConnection, DiskStorage, SQLiteVersionRepository
+
 
 def print_version_info(version):
     """Helper to print version information."""
@@ -55,7 +52,7 @@ def main():
 
     # Create some versions
     print("Creating test versions...")
-    
+
     # Character versions
     files["character"].write_text("Character mesh v1")
     version_manager.create_version(
