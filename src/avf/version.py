@@ -11,11 +11,12 @@ from .metadata import AssetMetadata
 logger = structlog.get_logger()
 
 class VersionIdentifier(BaseModel):
+    """Identifier for a specific version in a storage backend"""
     storage_type: str
     storage_id: str
     file_path: Path
     timestamp: datetime
-    metadata: Dict[str, Any]
+    metadata: AssetMetadata
 
 class AssetVersion:
     def __init__(
@@ -43,7 +44,7 @@ class AssetVersion:
         
         Args:
             file_path: Path to file to version
-            metadata: Version metadata
+            metadata: Version metadata dictionary
             storage_types: Optional list of storage types to use
             
         Returns:
@@ -53,6 +54,7 @@ class AssetVersion:
             storage_types = list(self.storage_backends.keys())
             
         version_ids = {}
+        metadata_obj = AssetMetadata(**metadata)
         
         # Create version in repository if available
         version_id = None
@@ -60,11 +62,11 @@ class AssetVersion:
             try:
                 version_id = self.version_repository.create_version(
                     file_path=file_path,
-                    creator=metadata.get("creator", "unknown"),
-                    tool_version=metadata.get("tool_version", "unknown"),
-                    description=metadata.get("description"),
-                    tags=metadata.get("tags", []),
-                    custom_data=metadata.get("custom_data", {})
+                    creator=metadata_obj.creator,
+                    tool_version=metadata_obj.tool_version,
+                    description=metadata_obj.description,
+                    tags=metadata_obj.tags,
+                    custom_data=metadata_obj.custom_data
                 )
             except Exception as e:
                 self.logger.error("Failed to create version in repository", error=str(e))
@@ -74,7 +76,7 @@ class AssetVersion:
         for storage_type in storage_types:
             try:
                 storage = self.storage_backends[storage_type]
-                storage_id = storage.store_version(file_path, metadata)
+                storage_id = storage.store_version(file_path, metadata_obj.model_dump())
                 
                 # Record storage location in repository
                 if self.version_repository and version_id:
@@ -96,7 +98,7 @@ class AssetVersion:
                     storage_id=storage_id,
                     file_path=file_path,
                     timestamp=datetime.now(),
-                    metadata=metadata
+                    metadata=metadata_obj
                 )
             except Exception as e:
                 self.logger.error(
@@ -134,7 +136,7 @@ class AssetVersion:
         self, 
         storage_type: str, 
         version_id: str
-    ) -> Dict[str, Any]:
+    ) -> AssetMetadata:
         """Get version metadata from storage
         
         Args:
@@ -148,7 +150,8 @@ class AssetVersion:
             raise KeyError(f"Unknown storage type: {storage_type}")
             
         storage = self.storage_backends[storage_type]
-        return storage.get_version_info(version_id)
+        metadata_dict = storage.get_version_info(version_id)
+        return AssetMetadata(**metadata_dict)
         
     def find_versions(
         self,

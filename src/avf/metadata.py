@@ -17,8 +17,8 @@ class AssetMetadata(BaseModel):
         description="Creation timestamp"
     )
     
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "creator": "john_doe",
                 "tool_version": "maya_2024",
@@ -30,3 +30,4 @@ class AssetMetadata(BaseModel):
                 }
             }
         }
+    }

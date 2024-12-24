@@ -1,11 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import SQLAlchemyError
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Any
 from ..repository.models import Base
 
 class DatabaseConnection:
-    def __init__(self, connection_string: str):
+    def __init__(self, connection_string: str) -> None:
         """Initialize database connection
         
         Args:
@@ -14,12 +15,12 @@ class DatabaseConnection:
         self.engine = create_engine(connection_string)
         self.Session = sessionmaker(bind=self.engine)
         
-    def create_tables(self):
+    def create_tables(self) -> None:
         """Create all database tables"""
         Base.metadata.create_all(self.engine)
         
     @contextmanager
-    def session(self) -> Generator:
+    def session(self) -> Generator[Session, Any, None]:
         """Provide a transactional scope around a series of operations
         
         Yields:
@@ -29,7 +30,7 @@ class DatabaseConnection:
         try:
             yield session
             session.commit()
-        except:
+        except SQLAlchemyError:
             session.rollback()
             raise
         finally:
