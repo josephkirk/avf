@@ -1,6 +1,9 @@
+"""Base classes for storage backends."""
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+
+from .reference import StorageReference
 
 class StorageBackend(ABC):
     """Abstract base class for version control storage backends"""
@@ -40,5 +43,39 @@ class StorageBackend(ABC):
             
         Returns:
             Version metadata
+        """
+        pass
+
+    @abstractmethod
+    def create_version_from_reference(
+        self, 
+        reference: StorageReference,
+        metadata: Dict[str, Any]
+    ) -> str:
+        """Create a new version from existing content in storage
+        
+        Args:
+            reference: Reference to existing content
+            metadata: Version metadata
+            
+        Returns:
+            Version identifier
+        """
+        pass
+
+    @abstractmethod
+    def list_references(
+        self,
+        reference_type: Optional[str] = None,
+        path_pattern: Optional[str] = None
+    ) -> List[StorageReference]:
+        """List available references in storage
+        
+        Args:
+            reference_type: Optional filter by reference type
+            path_pattern: Optional path pattern to filter
+            
+        Returns:
+            List of storage references
         """
         pass

@@ -1,9 +1,12 @@
+"""Git-based storage backend implementation."""
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import json
-from git import Repo, GitCommandError
+from git import Repo, GitCommandError, Commit
 import os
+from datetime import datetime
 from .base import StorageBackend
+from .reference import StorageReference, ReferenceType
 
 class GitStorage(StorageBackend):
     def __init__(self, repo_path: Path, branch_prefix: str = "asset_versions"):
@@ -142,10 +145,132 @@ class GitStorage(StorageBackend):
                 raise FileNotFoundError(f"No metadata found for version {version_id}")
                 
             metadata_path = self.repo_path / metadata_files[0]
-            return json.loads(metadata_path.read_text())
+            metadata = json.loads(metadata_path.read_text())
+            
+            # Add Git-specific information
+            commit = self.repo.head.commit
+            metadata.update({
+                "commit_hash": commit.hexsha,
+                "commit_date": commit.committed_datetime.isoformat(),
+                "commit_message": commit.message,
+                "branch": branch_name
+            })
+            
+            return metadata
             
         except GitCommandError as e:
             raise RuntimeError(f"Failed to retrieve metadata from Git: {e}")
         finally:
             # Always return to original branch
             original_branch.checkout()
+            
+    def create_version_from_reference(
+        self, 
+        reference: StorageReference,
+        metadata: Dict[str, Any]
+    ) -> str:
+        """Create a new version from existing content in storage
+        
+        Args:
+            reference: Reference to existing content
+            metadata: Version metadata
+            
+        Returns:
+            Version identifier
+            
+        Raises:
+            ValueError: If reference type is not supported
+            GitCommandError: If Git operation fails
+        """
+        if reference.reference_type != ReferenceType.COMMIT:
+            raise ValueError(f"Unsupported reference type: {reference.reference_type}")
+        
+        try:
+            # Get the commit
+            commit = self.repo.commit(reference.storage_id)
+            version_id = commit.hexsha[:12]
+            branch_name = self._get_version_branch(version_id)
+            
+            # Create new branch at the specified commit
+            new_branch = self.repo.create_head(branch_name, commit)
+            
+            # Store additional metadata
+            metadata.update({
+                "commit_hash": commit.hexsha,
+                "commit_date": commit.committed_datetime.isoformat(),
+                "commit_message": commit.message,
+                "reference": reference.model_dump(),
+                "original_path": str(reference.path)
+            })
+            
+            # Checkout branch and add metadata
+            original_branch = self.repo.active_branch
+            new_branch.checkout()
+            
+            try:
+                # Write metadata file
+                metadata_path = self.repo_path / f"{reference.path.name}.metadata.json"
+                metadata_path.write_text(json.dumps(metadata, indent=2))
+                
+                # Commit metadata
+                self.repo.index.add([metadata_path])
+                self.repo.index.commit(f"Add metadata for {reference.path.name}")
+                
+            finally:
+                # Return to original branch
+                original_branch.checkout()
+            
+            return version_id
+            
+        except (GitCommandError, KeyError) as e:
+            raise RuntimeError(f"Failed to create version from Git reference: {e}")
+
+    def list_references(
+        self,
+        reference_type: Optional[str] = None,
+        path_pattern: Optional[str] = None
+    ) -> List[StorageReference]:
+        """List available references in storage
+        
+        Args:
+            reference_type: Optional filter by reference type
+            path_pattern: Optional path pattern to filter
+            
+        Returns:
+            List of storage references
+        """
+        refs = []
+        if reference_type and reference_type != ReferenceType.COMMIT:
+            return refs
+            
+        try:
+            # Get all commits
+            for commit in self.repo.iter_commits():
+                # Get changed files in this commit
+                changed_files = []
+                for item in commit.stats.files:
+                    file_path = Path(item)
+                    if path_pattern and path_pattern not in str(file_path):
+                        continue
+                    if not file_path.name.endswith('.metadata.json'):
+                        changed_files.append(file_path)
+                
+                # Create reference for each changed file
+                for file_path in changed_files:
+                    refs.append(StorageReference(
+                        storage_type="git",
+                        storage_id=commit.hexsha,
+                        path=file_path,
+                        reference_type=ReferenceType.COMMIT,
+                        metadata={
+                            "commit_date": commit.committed_datetime.isoformat(),
+                            "commit_message": commit.message,
+                            "author": commit.author.name,
+                            "author_email": commit.author.email
+                        }
+                    ))
+                
+        except GitCommandError as e:
+            raise RuntimeError(f"Failed to list Git references: {e}")
+            
+        return refs
