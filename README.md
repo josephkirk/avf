@@ -1,72 +1,55 @@
 # Asset Version Framework (AVF)
 
-AVF is a comprehensive asset versioning system designed for game development pipelines. It provides a flexible, extensible framework for tracking asset versions across multiple storage backends while maintaining rich metadata and version history.
+A Python framework for game asset version control that works with your existing tools. AVF makes it easy to track asset versions across different storage systems (local disk, Git, Perforce) while maintaining rich metadata and version history.
 
-## Key Features
+## Why Use AVF?
 
-### Storage Reference System
-- Create versions from existing storage states without file copies
-- Support for different reference types (files, commits, changelists)
-- Track file moves and renames between versions
-- Unified interface across storage backends
+- **Works with Your Tools**: Keep using Git, Perforce, or local storage - AVF works with all of them
+- **Rich History Tracking**: See when, why, and how assets changed across all your storage systems
+- **Flexible Metadata**: Track any asset-specific information you need (polygon counts, texture sizes, etc.)
+- **Simple but Powerful**: Easy to start using, but scales with your needs
 
-### Multi-Backend Storage Support
-- Local disk storage with organized directory structure
-- Git integration with branch-based version tracking
-- Perforce support (coming soon)
-- Extensible storage backend system for custom implementations
+## Quick Install
 
-### Rich Metadata Management
-- Track creator, tool versions, and timestamps
-- Custom metadata support for asset-specific information
-- Tagging system for version organization
-- Full version history with searchable metadata
-
-### SQLite Database Integration
-- Efficient version tracking and querying
-- Relationship mapping between versions and storage locations
-- Tag-based searching and filtering
-- Performance optimized for large asset collections
-
-## Installation
-
-Using UV (Recommended):
-```bash
-uv venv venv
-source venv/bin/activate  # On Windows: .\\venv\\Scripts\\activate
-uv pip install -e .
-```
-
-Using pip:
 ```bash
 pip install avf
 ```
 
-## Quick Start
+For development:
+```bash
+# Clone the repository
+git clone https://github.com/your-username/avf.git
+cd avf
 
-### Basic Version Creation
+# Install with development dependencies
+uv venv .venv
+.\.venv\Scripts\activate  # On Windows
+source .venv/bin/activate # On Unix
+uv pip install -e ".[dev]"
+```
+
+## Basic Usage
 
 ```python
 from pathlib import Path
-from avf import AssetVersion, DiskStorage, GitStorage
+from avf import AssetVersion, DiskStorage
 
-# Initialize storage backends
-storage_backends = {
-    "disk": DiskStorage(Path("./asset_storage")),
-    "git": GitStorage(Path("./asset_repo"))
+# Set up a simple disk storage
+storage = {
+    "disk": DiskStorage(Path("./asset_storage"))
 }
 
 # Create version manager
-version_manager = AssetVersion(storage_backends)
+versions = AssetVersion(storage)
 
 # Create a new version
-version_ids = version_manager.create_version(
-    file_path=Path("character_model.fbx"),
+version_ids = versions.create_version(
+    file_path=Path("character.fbx"),
     metadata={
         "creator": "john_doe",
         "tool_version": "maya_2024",
         "description": "Updated character model",
-        "tags": ["character", "model", "HighPoly"],
+        "tags": ["character", "model"],
         "custom_data": {
             "polygon_count": 15000
         }
@@ -74,176 +57,115 @@ version_ids = version_manager.create_version(
 )
 ```
 
-### Creating versions from existing version already in storage
+## Looking Up Version History
 
 ```python
-from avf import StorageReference, ReferenceType
-
-# For existing files in disk storage
-disk_reference = StorageReference(
-    storage_type="disk",
-    storage_id="existing_file_hash",
-    path=Path("./asset_storage/existing_file.fbx"),
-    reference_type=ReferenceType.FILE
+# Get complete history of an asset
+history = versions.dump_asset_history(
+    Path("character.fbx")
 )
 
-disk_version_id = storage_backends["disk"].create_version_from_reference(
-    reference=disk_reference,
-    metadata={
-        "creator": "john_doe",
-        "tool_version": "maya_2024",
-        "description": "Version from existing file"
-    }
-)
+# Print basic info
+print(f"First version: {history['metadata']['first_version']}")
+print(f"Latest version: {history['metadata']['latest_version']}")
 
-# For existing Git commits
-git_reference = StorageReference(
-    storage_type="git",
-    storage_id="commit_hash",
-    path=Path("assets/model.fbx"),
-    reference_type=ReferenceType.COMMIT
-)
+# See timeline of changes
+for event in history['timeline']:
+    print(f"{event['timestamp']}: {event['action']}")
+```
 
-git_version_id = storage_backends["git"].create_version_from_reference(
-    reference=git_reference,
-    metadata={
-        "creator": "john_doe",
-        "tool_version": "maya_2024",
-        "description": "Version from existing commit"
-    }
+## Storage Options
+
+### Local Disk
+```python
+from avf import DiskStorage
+
+disk = DiskStorage(
+    storage_root=Path("./assets")
 )
 ```
 
-### Listing Storage References
-
+### Git
 ```python
-# List all file references in disk storage
-disk_refs = storage_backends["disk"].list_references(
-    reference_type=ReferenceType.FILE,
-    path_pattern="*.fbx"
-)
+from avf import GitStorage
 
-# List all commit references in Git storage
-git_refs = storage_backends["git"].list_references(
-    reference_type=ReferenceType.COMMIT,
-    path_pattern="assets/"
+git = GitStorage(
+    repo_path=Path("./git_repo"),
+    branch_prefix="assets"  # Optional
 )
 ```
 
-### Database Integration
+### Perforce
+```python
+from avf import PerforceStorage
+
+p4 = PerforceStorage(
+    port="perforce:1666",
+    user="username",
+    client="workspace_name",
+    workspace_root=Path("./p4_ws")
+)
+```
+
+## Adding Database Support
 
 ```python
 from avf import DatabaseConnection, SQLiteVersionRepository
 
-# Initialize database
-db = DatabaseConnection("sqlite:///asset_versions.db")
+# Set up database
+db = DatabaseConnection("sqlite:///versions.db")
 db.create_tables()
 
-# Initialize repository
+# Create repository
 repo = SQLiteVersionRepository(db)
 
-# Create version manager with repository
-version_manager = AssetVersion(
-    storage_backends=storage_backends,
+# Use with version manager
+versions = AssetVersion(
+    storage_backends=storage,
     version_repository=repo
 )
 
-# Find versions by tags
-character_versions = repo.find_versions(tags=["character"])
-
-# Get version history
-version_history = repo.get_version_history(Path("character_model.fbx"))
+# Now you can search versions
+models = repo.find_versions(tags=["model"])
 ```
 
-## Storage Backend Configuration
+## Using Existing Files
 
-### Disk Storage
+If you already have files in your storage systems, you can create versions from them:
+
 ```python
-disk_storage = DiskStorage(
-    storage_root=Path("./asset_storage")
+from avf import StorageReference, ReferenceType
+
+# Create version from existing file
+ref = StorageReference(
+    storage_type="disk",
+    storage_id="file_hash",
+    path=Path("./assets/existing.fbx"),
+    reference_type=ReferenceType.FILE
+)
+
+version_id = storage["disk"].create_version_from_reference(
+    reference=ref,
+    metadata={
+        "creator": "john_doe",
+        "tool_version": "maya_2024",
+        "description": "Existing model"
+    }
 )
 ```
 
-Features:
-- Organized directory structure
-- Automatic file deduplication
-- Metadata storage alongside assets
-- Support for existing file references
-- Hard linking optimization when possible
+## Development
 
-### Git Storage
-```python
-git_storage = GitStorage(
-    repo_path=Path("./asset_repo"),
-    branch_prefix="asset_versions"
-)
-```
-
-Features:
-- Branch-based version tracking
-- Support for existing commit references
-- Track file moves/renames through Git history
-- Full commit metadata preservation
-- Efficient storage through Git's object model
-
-## Advanced Usage
-
-### Custom Storage Backend
-
-```python
-from avf import StorageBackend, StorageReference
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-
-class CustomStorage(StorageBackend):
-    def create_version_from_reference(
-        self,
-        reference: StorageReference,
-        metadata: Dict[str, Any]
-    ) -> str:
-        # Implementation
-        pass
-
-    def list_references(
-        self,
-        reference_type: Optional[str] = None,
-        path_pattern: Optional[str] = None
-    ) -> List[StorageReference]:
-        # Implementation
-        pass
-
-    # Implement other required methods
-```
-
-## Development Setup
-
-1. Clone the repository:
+Running tests:
 ```bash
-git clone https://github.com/your-username/avf.git
-cd avf
+pytest tests/
 ```
 
-2. Run the development setup script:
+Code formatting:
 ```bash
-# On Windows:
-.\dev-setup.ps1
-
-# On Unix:
-./dev-setup.sh
+black src/ tests/
+ruff check src/ tests/
 ```
-
-3. Run tests:
-```bash
-uv run test
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
 
 ## License
 
@@ -253,4 +175,9 @@ MIT
 
 Current Version: 0.1.0 (Alpha)
 
-Under active development. API may change.
+The API is still evolving. If you're using it in production, pin your dependencies to specific versions.
+
+## Need Help?
+
+- Submit issues: https://github.com/your-username/avf/issues
+- Read docs: https://github.com/your-username/avf/blob/main/README.md

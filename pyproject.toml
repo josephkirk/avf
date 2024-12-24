@@ -1,20 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "avf"
 version = "0.1.0"
 description = "Asset Version Framework - A comprehensive asset versioning system for game development pipelines"
-authors = [
-    {name = "AVF Team", email = "team@avf.com"}
-]
-dependencies = [
-    "pydantic>=2.0",
-    "gitpython>=3.1.40",
-    "p4python>=2023.2",
-    "structlog>=24.1.0",
-    "sqlalchemy>=2.0.0",
-]
-requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "MIT"}
+authors = [
+    { name = "AVF Team", email = "team@avf.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -26,6 +23,13 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Version Control",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "gitpython>=3.1.40",
+    "p4python>=2023.2",
+    "structlog>=24.1.0",
+    "sqlalchemy>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -54,29 +58,24 @@ Repository = "https://github.com/your-username/avf"
 Documentation = "https://github.com/your-username/avf/blob/main/README.md"
 Changelog = "https://github.com/your-username/avf/blob/main/CHANGELOG.md"
 
-[build-system]
-requires = ["uv==0.1.23"]
-build-backend = "uv.builders.backend"
+[tool.hatch.build.targets.wheel]
+packages = ["src/avf"]
 
-# Package data
-[tool.setuptools]
-package-data = {"avf" = ["py.typed"]}
-
-[tool.uv]
-exclude = [
-    ".env",
-    ".venv",
-    "venv",
-    "env",
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/avf",
+    "tests",
+    "LICENSE",
+    "README.md",
+    "MANIFEST.in",
 ]
 
-[tool.uv.scripts]
-test = "pytest tests/ --verbose"
-test-cov = "pytest tests/ --cov=avf --cov-report=html"
-format = "black src/ tests/"
-lint = "ruff check src/ tests/"
-typecheck = "mypy src/"
-docs = "sphinx-build -b html docs/source docs/build"
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["avf"]
+
+[tool.setuptools.package-data]
+"avf" = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
@@ -92,24 +91,10 @@ select = [
     "RUF", # Ruff-specific rules
     "W",   # pycodestyle warnings
 ]
-ignore = []
-
-[tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]  # Allow assert statements in tests
-
-[tool.ruff.isort]
-known-first-party = ["avf"]
-combine-as-imports = true
 
 [tool.black]
 line-length = 100
 target-version = ["py38"]
-include = '\.pyi?$'
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/foo.py  # exclude a file named foo.py in the root of the project
-'''
 
 [tool.mypy]
 python_version = "3.8"
@@ -117,61 +102,8 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 check_untyped_defs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-extra_checks = true
-disallow_untyped_decorators = true
-disallow_incomplete_defs = true
-disallow_untyped_calls = true
-disallow_subclassing_any = true
-no_implicit_optional = true
-
-# Per-module options
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-check_untyped_defs = false
 
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --doctest-modules"
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-filterwarnings = [
-    "error",
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning",
-]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-]
-
-[tool.coverage.run]
-branch = true
-source = ["avf"]
-omit = [
-    "tests/*",
-    "setup.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "pass",
-    "raise ImportError",
-]
-ignore_errors = true
-omit = [
-    "tests/*",
-    "setup.py",
-]

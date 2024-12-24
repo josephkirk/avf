@@ -1,0 +1,12 @@
+include LICENSE
+include README.md
+include pyproject.toml
+include src/avf/py.typed
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
+recursive-exclude dist *
+recursive-exclude build *
+recursive-exclude .git *
+recursive-exclude .env *
+recursive-exclude .venv *
