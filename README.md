@@ -163,7 +163,7 @@ pytest tests/
 
 Code formatting:
 ```bash
-black src/ tests/
+ruff format src/ tests/
 ruff check src/ tests/
 ```
 
@@ -176,8 +176,3 @@ MIT
 Current Version: 0.1.0 (Alpha)
 
 The API is still evolving. If you're using it in production, pin your dependencies to specific versions.
-
-## Need Help?
-
-- Submit issues: https://github.com/your-username/avf/issues
-- Read docs: https://github.com/your-username/avf/blob/main/README.md
